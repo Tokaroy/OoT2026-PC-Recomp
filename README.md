@@ -4,15 +4,15 @@ This repository contains the **Ocarina Reborn launcher, patched engine and build
 
 A native Windows x64 version of **The Legend of Zelda: Ocarina of Time (Switch 2)**, built on your PC from your own `.nup` game file.
 
-**Current release: v1.1.6 Â· November 24, 2026**
+**Current release: v1.1.7 · November 25, 2026**
 
-[Download the latest release](https://github.com/ocarina-pc-native-build/ocarina-pc-native-build.github.io/releases/latest) Â· [Website](https://ocarina-pc-native-build.github.io/) Â· [Discord](https://discord.gg/vDPAcc6JnY)
+[Download the latest release](https://github.com/ocarina-pc-native-build/ocarina-pc-native-build.github.io/releases/latest) · [Website](https://ocarina-pc-native-build.github.io/) · [Discord](https://discord.gg/vDPAcc6JnY)
 
 ## Source code
 
-The actual **v1.1.6 source** is here: [engine and renderer](engine/), [game-build pipeline](engine/nx2/), [Ocarina Reborn launcher](tools/alpha/launcher/), [installer/build scripts](scripts/), [custom hooks and graphics](tools/alpha/hud/), [tests](tools/alpha/tests/) and [build instructions](BUILDING.md). The original [engine builder source](engine/builder/) is retained alongside the Ocarina Reborn launcher.
+The actual **v1.1.7 source** is here: [engine and renderer](engine/), [game-build pipeline](engine/nx2/), [Ocarina Reborn launcher](tools/alpha/launcher/), [installer/build scripts](scripts/), [custom hooks and graphics](tools/alpha/hud/), [tests](tools/alpha/tests/) and [build instructions](BUILDING.md). The original [engine builder source](engine/builder/) is retained alongside the Ocarina Reborn launcher.
 
-`engine/` contains the already-patched sources used by the released installer, including custom tunic colors and the classic counters fix. Classic-voice preparation imports a user-selected ZIP; recordings are not bundled. `SOURCE-MANIFEST.json` records the engine file hashes and the matching installer SHA-256. GitHub's v1.1.6 source archives contain this project source; the website lives in its separate repository.
+`engine/` contains the already-patched sources used by the released installer, including custom tunic colors and the classic counters fix. Classic-voice preparation imports a user-selected ZIP; recordings are not bundled. `SOURCE-MANIFEST.json` records the engine file hashes and the matching installer SHA-256. GitHub's v1.1.7 source archives contain this project source; the website lives in its separate repository.
 
 ## Get started
 
@@ -34,39 +34,37 @@ You need Windows x64, a Vulkan-capable graphics card and your own supported game
 
 NVIDIA's DLSS files are downloaded separately through the launcher after accepting NVIDIA's license.
 
-## What's new in v1.1.6
+## What's new in v1.1.7
 
-**Ocarina Reborn v1.1.6 — Texture Transfer Fix**
+**Ocarina Reborn v1.1.7 — Stability & Smoothness Update**
 
-**Performance**
-- Texture reads and writes now release their virtual CPU core while waiting for the graphics backend, allowing other game threads to continue.
-- Applies to both graphics backends when virtual-core scheduling is active.
+**🛠️ Crash fixes**
+- Fixed a crash while models load when a model's memory ran full (for example on the Gerudo Valley bridge as adult Link).
+- Fixed a rare loading crash caused by two game threads running at the same time that must never overlap.
 
-**Updating**
-- Update the launcher, then let it update the game once. Saves and settings stay.
-- Keep existing shader caches. No uninstall or game-file reimport is needed.
+**⚡ Smoother play**
+- Fewer stutters: the game no longer waits for GPU work it does not need when it reads its visibility tables. The biggest difference is when the GPU is the bottleneck, e.g. at high resolutions.
+- Fewer area reloads at the edge of Castle Town Market: turning back and forth no longer makes the game reload the neighbouring area again and again.
 
-**Testing status**
-- This update has not undergone regression tests or gameplay testing. No FPS improvement has been measured for this change.
-- If you notice a problem, press Ctrl+F8, close the game and send a fresh Debug Package in #post-your-logs-here with the area and what happened.
+**🎬 Movies**
+- Movie sound no longer drifts behind the picture at high frame rates.
+- Movies keep their 16:9 shape on screens narrower than 16:9.
 
-## What's new in v1.1.4
+**🎮 Gameplay & controls**
+- Fixed a save that could stay stuck at 20:00 (first adult night) outside Hyrule Field. The clock runs again, and the Sun's Song works.
+- Plus is now Tab only, no longer also Enter. Some controller software sends Enter when you press A, which opened the pause menu. Your old controls are updated automatically; a custom Plus key you chose yourself stays.
 
-- Engine v2.3.2: improved CPU-thread coordination, renderer scheduling and memory reuse.
-- Better cleanup of shader resources and memory-allocation recovery under Windows memory pressure.
-- Frame Generation respects display capacity; improved HDR, ultrawide transitions and shader compatibility.
-- Automatic save backups outside the game folder; improved audio recovery and crash reports.
-- Optional CRT filters and optional Intel XeSS runtime support in F1.
-- Classic UI selection and direct downloads, plus return to launcher after builds.
-- Same-folder startup protection and accurate debug-session reporting.
+**ℹ️ Updating**
+- Install over your existing version, then let the launcher update the game. This update rebuilds the game code once, so it takes a few minutes longer than usual.
+- Saves, settings and shader caches stay.
 
-The full engine update is included. Let the launcher rebuild/update the game and prepare shaders; the first start can take longer. Do not delete compatible caches manually. No uninstall or game-file reimport is needed; saves and settings stay.
+**📊 Help us improve**
+- If you notice stutters or crashes, press **Ctrl+F8** when it happens, close the game and create a **Debug Package** in the launcher.
+- Post it in **#post-your-logs-here** with the area and what happened.
 
-If the withdrawn first v1.1.4 was already installed, download the installer again: the numeric version is unchanged.
+Thanks for testing! 💙
 
-Classic UI by [kuledawg](https://gamebanana.com/mods/737280) is optional and downloaded directly from GameBanana, not bundled. In-game visual testing is ongoing. Intel XeSS requires its separate Windows runtime. Performance varies by scene and hardware; not all stutters or GPU issues are resolved.
-
-[Full release notes and SHA-256](https://github.com/ocarina-pc-native-build/ocarina-pc-native-build.github.io/releases/tag/v1.1.4) Â· [All releases](https://github.com/ocarina-pc-native-build/ocarina-pc-native-build.github.io/releases)
+[Full release notes and SHA-256](https://github.com/ocarina-pc-native-build/ocarina-pc-native-build.github.io/releases/tag/v1.1.4) · [All releases](https://github.com/ocarina-pc-native-build/ocarina-pc-native-build.github.io/releases)
 
 ## Feedback and troubleshooting
 
@@ -82,6 +80,6 @@ Ocarina Reborn is an unofficial community project and is not affiliated with Nin
 
 ## Support
 
-[Buy Me a Coffee](https://buymeacoffee.com/hotdevilsauce) â€” optional support for development tools, testing and ongoing work. Support does not purchase a game, early access or a guaranteed feature.
+[Buy Me a Coffee](https://buymeacoffee.com/hotdevilsauce) — optional support for development tools, testing and ongoing work. Support does not purchase a game, early access or a guaranteed feature.
 
 For release maintenance, see the [main repository publishing notes](https://github.com/ocarina-pc-native-build/ocarina-pc-native-build.github.io/blob/main/PUBLISHING.md).
