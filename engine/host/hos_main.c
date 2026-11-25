@@ -2010,6 +2010,10 @@ static int game_main(int argc, char **argv) {
        it, and after ocarina_reborn_env.txt, which may set HOS_OPTIONS_FILE; Linux's main chose it already: host/options_path.c) */
     hos_options_choose(argc, argv);
     {
+        void hos_oot_heap_test_init(void);
+        hos_oot_heap_test_init();
+    }
+    {
         const char *protect_hearts = getenv("HOS_OOT_PROTECT_HEARTS");
         hos_oot_protect_hearts = protect_hearts && !strcmp(protect_hearts, "1");
     }
