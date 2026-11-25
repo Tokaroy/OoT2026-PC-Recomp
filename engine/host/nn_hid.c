@@ -5,7 +5,7 @@
    page (gpu/vk/vk_menu.cpp) changes it, kept in ocarina_reborn_options.ini (binds_load). The defaults:
    Keyboard (totk-pc-recomp's layout): WASD left stick, arrows or IJKL right stick (camera), Space X (jump), E A
    (action), Shift B (run/cancel), Q L (abilities), R R, Z ZL, X or F ZR (bow), Ctrl left-stick click (crouch), C
-   right-stick click (first person), Tab or Enter Plus, M Minus (map), 1 2 3 4 d-pad left, up, right, down, Caps Lock
+   right-stick click (first person), Tab Plus (not Enter: controller software sends Enter for a pad's A), M Minus (map), 1 2 3 4 d-pad left, up, right, down, Caps Lock
    walk (walk_held: the movement keys tilt the stick less). Only while the game's window is in front (the key state is
    global).
    Mouse (after a click in the window, display.c; Esc releases): its motion is the right stick (mouse panning,
@@ -568,7 +568,10 @@ static int is_mouse_vk(int vk) { return vk == VK_LBUTTON || vk == VK_RBUTTON || 
    IJKL the camera; Caps Lock walk, beside the movement keys and no other control's) */
 static const unsigned char key_default[HOS_KEY_N][2] = {
     {'E'}, {VK_SHIFT}, {VK_SPACE}, {VK_LBUTTON}, {VK_CONTROL}, {'C'}, {'Q'}, {'R'}, {'Z', VK_RBUTTON}, {'X', 'F'},
-    {VK_TAB, VK_RETURN}, {'M'}, {'1'}, {'2'}, {'3'}, {'4'}, {'W'}, {'S'}, {'A'}, {'D'}, {VK_UP, 'I'}, {VK_DOWN, 'K'},
+    /* (Plus: Tab alone. Enter is the key Steam Input's Desktop layout and other controller software send for a pad's A
+       when the game is started outside Steam, so every A press also opened the game's pause menu. Enter was the second
+       key until options_version 7: binds_load moves a file's old default pair away, and a player's own choice is kept) */
+    {VK_TAB}, {'M'}, {'1'}, {'2'}, {'3'}, {'4'}, {'W'}, {'S'}, {'A'}, {'D'}, {VK_UP, 'I'}, {VK_DOWN, 'K'},
     {VK_LEFT, 'J'}, {VK_RIGHT, 'L'}, {0}, {0}, {0}, {0}, {0}, {VK_CAPITAL}};   /* (the five note rows start unset: oc_pad_word) */
 static volatile LONG toggle_reset;
 static HoldToggle toggles;
@@ -661,6 +664,13 @@ static void binds_load(void) {
                 hos_log("hid: no Walk key: ocarina_reborn_options.ini gives its default key (%d) to another control",
                         key_default[HOS_KEY_WALK][0]);
             }
+        }
+        /* Plus was Tab and Enter until options_version 7. Enter is what controller software sends for a pad's A when the
+           game is started outside Steam, so every A press also opened the pause menu: the old default pair moves to Tab
+           alone. A file whose Plus is not that pair was chosen and is kept */
+        if (version < 7 && key_bind[HOS_SW_PLUS][0] == VK_TAB && key_bind[HOS_SW_PLUS][1] == VK_RETURN) {
+            key_bind[HOS_SW_PLUS][1] = 0;
+            hos_log("hid: Plus is Tab alone: Enter, which controller software sends for a pad's A, is no longer its second key");
         }
     }
     if (changed) hos_log("hid: %d controls from ocarina_reborn_options.ini", changed);
