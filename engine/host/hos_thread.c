@@ -1869,7 +1869,7 @@ static int64_t vc_env_ns(const char *name, int64_t us) {
     return (e ? atoll(e) : us) * 1000;
 }
 static void vc_acquire(HosThread *t) {
-    static int64_t esc_better = -1, esc_eq, slice, starve, spin_ns;
+    static int64_t esc_better = -1, esc_eq, slice, starve, spin_ns, pin_esc;
     int spun = 0;
     if (esc_better < 0) {
         spin_ns = vc_env_ns("HOS_VCORE_SPIN_US", 0);
@@ -1879,6 +1879,11 @@ static void vc_acquire(HosThread *t) {
         esc_better = vc_env_ns("HOS_VCORE_ESCAPE_US", 2000000);
         slice = vc_env_ns("HOS_VCORE_SLICE_US", 2000);
         starve = vc_env_ns("HOS_VCORE_STARVE_US", 1000000);
+        {   /* (hookshot) a waiter held to one core behind a better holder there: its escape's backstop, below */
+            const char *e = getenv("HOS_VCORE_PIN_ESCAPE_MS");
+            const long long ms = e && *e ? atoll(e) : 5000;
+            pin_esc = ms > 0 ? ms * 1000000LL : 0;
+        }
     }
     AcquireSRWLockExclusive(&vc_lock);
     vc_st.takes++;
@@ -1951,7 +1956,18 @@ static void vc_acquire(HosThread *t) {
         }
         const int64_t waited = hos_now_ns() - t0;
         if (starve > 0 && waited > starve) t->vc_starved = 1;
-        if (waited > (worst ? esc_better : esc_eq)) {
+        /* (hookshot) A waiter held to one core, behind a holder of better priority there, does not escape at esc_eq: Horizon
+           never runs it then, and the game pins threads to another's core so the two never overlap. An escape there ran
+           both at once: a load crash (an effect graph's owner half made) came each time right after PreActorModelCompose
+           escaped core 1 or 2 while BaseProcCreateAndDeleteThread held it. A backstop at HOS_VCORE_PIN_ESCAPE_MS (5000;
+           0: as before) stays for a holder that never gives the core up at all */
+        int64_t limit = worst ? esc_better : esc_eq;
+        if (!worst && pin_esc && m && (m & (m - 1)) == 0) {
+            const int k = __builtin_ctz(m);
+            HosThread *h = k < vc_cores() ? vc_owner[k] : NULL;
+            if (h && h->priority < t->priority && pin_esc > limit) limit = pin_esc;
+        }
+        if (waited > limit) {
             vc_dequeue(t);
             t->vc_starved = 0;
             t->vc_escaped = 1;
