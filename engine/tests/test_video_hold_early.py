@@ -1,7 +1,7 @@
 """A movie's picture is not handed out ahead of its clock: the one before is shown again (host/nn_video.c, issue 1964).
 
 The game takes a movie's next picture when its own count of the movie's 60ths says so (hos_movie_frames, host/nn_vi.c).
-While a movie plays, Longshot paces at 240 fps, and the count then follows the frames' time, not the clock: at ~226 fps
+While a movie plays, the game is paced at 240 fps, and the count then follows the frames' time, not the clock: at ~226 fps
 on an RTX 3080 the opening's picture ran ahead of its clock, 0.2 s after 6 s and 0.73 s by its end, while its sound kept
 the clock, so the sound came late. dec_acquire already skips pictures that are late (tests/test_video_catchup.py); a
 picture more than 25 ms early is now held back, and the buffer handed out shows the last picture again. Not the first

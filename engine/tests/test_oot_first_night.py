@@ -2,7 +2,7 @@
 
 The game holds the clock at 20:00 while `HrlField_isFirstNightTime_Adult` (MurmurHash3 0x8592aa82) is 1 and quest
 0x4dbca27f is not Ready (f_8347c020, called from f_803edf70). The flag is only meaningful in Hyrule Field's first adult
-night; a save in the Market, the castle or anywhere else with the flag still 1 can never leave night (Longshot #1064).
+night; a save in the Market, the castle or anywhere else with the flag still 1 can never leave night.
 `oot_inventory_refresh` runs twice a second and already reads the map and Link's age, so the repair lives there: outside
 Hyrule Field, clear the flag with the game's own setter and log it once.
 
