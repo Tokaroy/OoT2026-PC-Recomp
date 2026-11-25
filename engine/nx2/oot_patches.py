@@ -886,6 +886,32 @@ def patch_ocarina_wait(s):
     return s
 
 
+# (hookshot) OoT's OptimizeChangeBank update (f_832b9880): its pick of the neighbouring area to get ready (w21) goes through
+# host/oot_ocb.c before the code that asks for it and lets the others go (L_832b9dc8, inside the function only). Where two
+# areas' radii overlap (the Market's plaza) the pick flipped as Link turned and each flip threw a half-loaded area away
+OCB_HEAD = "void f_832b9880(Ctx *__restrict A64_NOESC c) {\n"
+OCB_ANCHOR = "L_832b9dc8:;\n"
+OCB_CALL = ("    { extern uint64_t hos_oot_ocb_hold(Ctx *, uint64_t, uint64_t); "
+            "c->x[21] = hos_oot_ocb_hold(c, c->x[19], c->x[21]); }   /* (nx2/oot_patches.py: host/oot_ocb.c) */\n")
+
+
+def patch_ocb(s):
+    """The neighbouring area's hold in f_832b9880 (the supported build's address): (text, 1 when made now or found made)"""
+    at = s.find(OCB_HEAD)
+    if at < 0:
+        return s, 0
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # (python -I leaves the script folder off)
+    import lifted_c
+    m = lifted_c.HEAD.search(s, at + len(OCB_HEAD))
+    end = m.start() if m else len(s)
+    body = s[at:end]
+    if OCB_CALL in body:
+        return s, 1
+    if body.count(OCB_ANCHOR) != 1 or "c->x[21]" not in body:
+        return s, 0
+    return s[:at] + body.replace(OCB_ANCHOR, OCB_ANCHOR + OCB_CALL, 1) + s[end:], 1
+
+
 def patch_file(s, name, protect_hearts=False):
     """One lifted file's patches (apply(), and nx2/chunks.py edit_c, a process per file): (its text, the places counted in it, the
     lines to print). The counts add up over the files; report() decides from the sums"""
@@ -1034,6 +1060,11 @@ def patch_file(s, name, protect_hearts=False):
     if heap != out:
         lines.append("oot_patches: heap-full retries of the OptimizeChangeBank allocations in " + name)
     out = heap
+    ocb, found = patch_ocb(out) if protect_hearts else (out, 0)
+    counts["ocb hold"] += found
+    if ocb != out:
+        lines.append("oot_patches: the neighbouring area's hold in " + name)
+    out = ocb
     out, whole = patch_whole_frames(out)
     counts["whole sites"] += out.count(WHOLE_MARK)   # (made now, or by an earlier run over this file)
     if whole:
@@ -1118,10 +1149,14 @@ def report(paths, counts, protect_hearts=False):
     camera_speed = total["camera speed"]   # (the turn-speed functions that scale by hos_camera_scale: patch_camera_speed)
     # (patch_heap_retry, the supported build only: its functions)
     heap_sites = [total["heap GPU sites"], total["heap CPU sites"], total["heap object sites"], total["heap rest sites"]]
-    if protect_hearts and heap_sites != [len(GPU_ALLOC_SITES), len(HEAP_ALLOC_SITES), len(OBJECT_ALLOC_SITES),
-                                         len(REST_OWN_SITES) + len(REST_END_SITES)]:
+    # (the object sites' functions may also have a copy in code_hot.c, split_hot's: each copy is patched, so at least once each)
+    if protect_hearts and (heap_sites[:2] + heap_sites[3:] != [len(GPU_ALLOC_SITES), len(HEAP_ALLOC_SITES),
+                                                                len(REST_OWN_SITES) + len(REST_END_SITES)]
+                           or heap_sites[2] < len(OBJECT_ALLOC_SITES)):
         print("oot_patches: WARNING: the OptimizeChangeBank allocations were found %s times, not once each: a full heap is "
               "not tried again" % heap_sites)
+    if protect_hearts and total["ocb hold"] != 1:
+        print("oot_patches: WARNING: the neighbouring area's pick was found %d times, not once: no hold" % total["ocb hold"])
     step_sites = total["step sites"]   # (the divides with the hook)
     step_files = [p for p, c in zip(paths, counts) if c["step sites"]]   # (the files that have it)
     whole_sites = total["whole sites"]   # (the counters of WHOLE_SITES with the whole frames: patch_whole_frames)
